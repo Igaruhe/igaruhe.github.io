@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How I work with AI – Yizhe Zhou</title>
+<meta name="description" content="The setup behind Yizhe Zhou's AI projects: rules in files, reusable skills, agents that learn from approved decisions, and checks before anything is published.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-head"><div class="wrap">
+  <a class="brand" href="../"><img src="../assets/favicon.svg" alt="" width="28" height="28">Yizhe Zhou</a>
+  <nav aria-label="Site"><ul class="site-nav">
+    <li><a href="../">Work</a></li>
+    <li><a href="./" aria-current="page">How I work with AI</a></li>
+    <li><a href="https://www.linkedin.com/in/yizhe-zhou/">LinkedIn</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="main" class="wrap">
+<article class="narrow">
+  <p class="kicker">Method</p>
+  <h1>How I work with AI</h1>
+  <p class="lead">I use Claude as a fast, careful builder. I stay responsible for the goal, the decisions and the quality. These six habits make that work.</p>
+
+  <ol class="steps">
+    <li>
+      <h3>Write the rules down, where the AI reads them</h3>
+      <p>Each project has rule files (<code>CLAUDE.md</code>) that every AI session reads first: what the project is, where it's published, what must never change, what must stay private. A rule I'd otherwise repeat in every chat lives there once.</p>
+      <p class="muted">Example: “Card IDs come from position in the data. Add new cards at the end; never reorder.” Breaking this would lose saved progress, so it's a rule, not a memory.</p>
+    </li>
+    <li>
+      <h3>Turn repeated work into skills and agents</h3>
+      <p>When I do something twice, it becomes a <b>skill</b> (a written procedure the AI follows) or an <b>agent</b> (a specialist with its own instructions). Examples: a skill for adding a new app to a repository without touching the others, and a design agent that starts every redesign from public design-system foundations.</p>
+    </li>
+    <li>
+      <h3>Research, propose, then I decide</h3>
+      <p>For anything that changes the product, the AI first researches the guidance, then proposes options with a recommendation and trade-offs. Nothing is built until I choose. I review screenshots and the running result, not just the code.</p>
+    </li>
+    <li>
+      <h3>Let approved decisions teach the agent</h3>
+      <p>After I approve a decision, the lesson goes back into the agent's instructions, with the project as a worked example. The next project starts one step further. Example: “Views that share filters are views of the same content; don't give them separate tabs.”</p>
+    </li>
+    <li>
+      <h3>Check automatically before anything ships</h3>
+      <p>Scripts check what people forget: a structure check before every commit, contrast ratios for every colour pair, phone and desktop screenshots from a headless browser. Changes go through pull requests, never straight to the main branch.</p>
+      <p class="muted">At work I go further: hooks that block personal data, secrets and prompt injection before an automated change is merged, and checks that stop an unattended run before a bad write.</p>
+    </li>
+    <li>
+      <h3>Keep private things private by design</h3>
+      <p>Copyrighted or confidential material stays in private repositories. Anything public is built from content I own, and the build script refuses to run if private names leak in. I check the AI's output for this too: it's my name on the page.</p>
+    </li>
+  </ol>
+
+  <h2>Tools I use</h2>
+  <ul class="tags">
+    <li>Claude Code</li><li>Claude agents &amp; skills</li><li>Python</li><li>SQL / Snowflake</li><li>GitHub</li><li>Playwright</li><li>Looker</li><li>HTML/CSS</li>
+  </ul>
+
+  <h2>See it in a project</h2>
+  <p><a href="../projects/b2-pruefungskiste/">B2 Prüfungskiste</a>: a study app for my German exam, with the decisions and a table of who did what.</p>
+</article>
+</main>
+
+<footer class="site-foot"><div class="wrap">
+  <span>© 2026 Yizhe Zhou · Berlin</span>
+  <span><a href="https://www.linkedin.com/in/yizhe-zhou/">LinkedIn</a> · <a href="https://github.com/Igaruhe/igaruhe.github.io">Source on GitHub</a></span>
+</div></footer>
+</body>
+</html>

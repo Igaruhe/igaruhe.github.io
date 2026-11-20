@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>B2 Prüfungskiste – Yizhe Zhou</title>
+<meta name="description" content="Case study: a spaced-repetition study app for the German B2 exam, built with Claude. Problem, decisions, AI collaboration and a live demo.">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-head"><div class="wrap">
+  <a class="brand" href="../../"><img src="../../assets/favicon.svg" alt="" width="28" height="28">Yizhe Zhou</a>
+  <nav aria-label="Site"><ul class="site-nav">
+    <li><a href="../../" aria-current="page">Work</a></li>
+    <li><a href="../../how-i-work-with-ai/">How I work with AI</a></li>
+    <li><a href="https://www.linkedin.com/in/yizhe-zhou/">LinkedIn</a></li>
+  </ul></nav>
+</div></header>
+
+<main id="main" class="wrap">
+<article class="narrow">
+  <p class="kicker">Case study · Personal project</p>
+  <h1>B2 Prüfungskiste: one study box for my German B2 exam</h1>
+  <p class="lead">I needed to learn three textbooks' worth of grammar, phrases and vocabulary before a fixed exam date. I built a flash-card app with Claude that tells me what to study each day, works on my phone and keeps my progress in sync.</p>
+
+  <dl class="snapshot">
+    <dt>My role</dt><dd>Product owner and designer: I set the goals and rules, chose between the options, reviewed every change.</dd>
+    <dt>AI's role</dt><dd>Claude (Claude Code) researched options, wrote the code, took screenshots and checked contrast.</dd>
+    <dt>Built with</dt><dd>One HTML file (HTML, CSS, JavaScript), published as a private Claude artifact with a small database for progress.</dd>
+    <dt>When</dt><dd>November 2026, in daily use until the exam in December 2026.</dd>
+    <dt>Scale</dt><dd>1,215 cards in four categories, from three textbooks.</dd>
+  </dl>
+
+  <p><a class="btn" href="demo/">Try the demo</a><a class="btn secondary" href="#decisions">Read the decisions</a></p>
+  <p class="caption">The demo is the real app with 20 sample cards I wrote for it. The textbook content is copyrighted, so it stays private.</p>
+
+  <figure>
+    <img src="img/desktop-ueben.png" alt="The app on a laptop. Header with a pixel pretzel icon, tabs Üben, Stöbern and Fortschritt, a line saying 'Heute: 0 fällig + 10 neu', a large flash card and four rating buttons: Nochmal, Schwer, Gut, Leicht." width="2200" height="1520">
+    <figcaption class="caption">Üben (practise): the app opens on today's cards.</figcaption>
+  </figure>
+
+  <h2>The problem</h2>
+  <p>The B2 exam tests grammar, set phrases for speaking and writing, and a large vocabulary. My material was spread over three textbooks and their word lists. I had three problems:</p>
+  <ul>
+    <li><b>Too much to review by hand.</b> Over 1,200 items, and no way to know which ones I was about to forget.</li>
+    <li><b>A fixed deadline.</b> I needed a daily amount that would get me through everything before the exam, with time left to revise.</li>
+    <li><b>Short sessions on the phone.</b> I study in short sessions, often on my phone, so the phone layout mattered most.</li>
+  </ul>
+
+  <h2 id="decisions">Three decisions</h2>
+
+  <h3>1. Let the exam date set the daily goal</h3>
+  <p>The app uses spaced repetition, a simplified version of the SM-2 method Anki uses. After each card I rate how well I knew it, and the app schedules the next review: sooner for hard cards, later for easy ones.</p>
+  <p>On top of that, the daily goal comes from the calendar: <b>cards not yet learned ÷ days left until one week before the exam</b>, at least 10 a day. The last week is kept free for revision. If I miss a day, the goal goes up a little; I never have to plan it myself.</p>
+  <div class="trio">
+    <figure><img src="img/after-phone-ueben.png" alt="Phone: the Üben tab with a grammar card asking how to express an unreal wish in the past." width="780" height="1560" loading="lazy"><figcaption class="caption">Front of a card.</figcaption></figure>
+    <figure><img src="img/after-phone-back.png" alt="Phone: the back of a vocabulary card for 'zuverlässig' with meaning, forms, word parts, synonyms and examples." width="780" height="1560" loading="lazy"><figcaption class="caption">Back: meaning, forms, examples.</figcaption></figure>
+    <figure><img src="img/after-phone-fortschritt.png" alt="Phone: the Fortschritt tab showing today's goal, days to the exam and progress per category." width="780" height="1560" loading="lazy"><figcaption class="caption">Progress against the exam plan.</figcaption></figure>
+  </div>
+
+  <h3>2. Borrow proven design foundations, add a thin personal layer</h3>
+  <p>I didn't want to invent colours, type sizes or focus states. The app stands on the public foundations of the <a href="https://design-system.service.gov.uk/">GOV.UK Design System</a> and the <a href="https://designsystem.parliament.uk/">UK Parliament Design System</a>: dark text on light surfaces, clear borders, square corners and the yellow focus state for keyboard users.</p>
+  <p>My own taste sits on top as a thin layer: an icon I chose (a pixel pretzel), one accent colour, and colour used sparingly (about 60% neutral surfaces, 30% text and structure, 10% accent). Every text colour is checked with a script against WCAG 2.2 AA (at least 4.5:1), in light and dark mode.</p>
+  <p class="inset">I made this a reusable Claude agent (<code>design-foundations</code>), so every later design change starts from the same rules.</p>
+
+  <h3>3. Organise the app by task, not by view</h3>
+  <p>The first version had three equal tabs: <b>Liste</b> (list), <b>Karten</b> (cards) and <b>Fortschritt</b> (progress). In use, it felt wrong: on the phone, the card sat below a filter button and a row of deck modes.</p>
+  <p>I asked Claude to research navigation guidance before proposing a fix. The guidance agreed:</p>
+  <ul>
+    <li>A bottom tab bar is for 3–5 separate destinations (<a href="https://m1.material.io/components/bottom-navigation.html">Material Design</a>).</li>
+    <li>Different views of the same content belong in a segmented control, not in the tab bar (<a href="https://developer.apple.com/design/human-interface-guidelines/segmented-controls">Apple HIG</a>).</li>
+    <li>Put the most-used section first (<a href="https://design-system.service.gov.uk/components/tabs/">GOV.UK Tabs</a>).</li>
+  </ul>
+  <p>Liste and Karten shared every filter, so they were two views of the same content, not two places. Claude proposed two options. I chose to organise by task:</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Tab</th><th>Job</th><th>What changed</th></tr></thead>
+    <tbody>
+      <tr><td><b>Üben</b> (practise)</td><td>Do today's review</td><td>Opens on today's cards. No filters, so the card gets the space.</td></tr>
+      <tr><td><b>Stöbern</b> (browse)</td><td>Look things up, study one chapter</td><td>Filters, search and the list, plus “Diese 66 Karten üben” to practise exactly that selection.</td></tr>
+      <tr><td><b>Fortschritt</b> (progress)</td><td>Check where I am</td><td>Unchanged. “Diese Karten jetzt üben” starts a session with the hardest cards.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="pair">
+    <figure><img src="img/before-phone-karten.png" alt="Before: phone with a Filter button, a row of Heute, Schwierig and Alle chips, then the card; bottom tabs Liste, Karten, Fortschritt." width="780" height="1560" loading="lazy"><figcaption class="caption"><b>Before:</b> filter, mode row, then the card.</figcaption></figure>
+    <figure><img src="img/after-phone-ueben.png" alt="After: phone with one line 'Heute: 0 fällig + 10 neu' above the card; bottom tabs Üben, Stöbern, Fortschritt." width="780" height="1560" loading="lazy"><figcaption class="caption"><b>After:</b> one line, then the card.</figcaption></figure>
+  </div>
+  <p>The study screen lost two layers of controls. The lesson went back into the design agent as a new rule, with this app as the worked example, so the next project starts with it.</p>
+
+  <h2>Working with AI: who did what</h2>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Step</th><th>Me</th><th>Claude</th></tr></thead>
+    <tbody>
+      <tr><td>Goals and rules</td><td>Set the goal, the exam plan, the privacy rules and the design direction</td><td>Wrote them down as project rules (<code>CLAUDE.md</code>) so every session follows them</td></tr>
+      <tr><td>Research</td><td>Asked the question, judged the sources</td><td>Searched design-system and platform guidance, summarised it with links</td></tr>
+      <tr><td>Options</td><td>Chose one, or asked for changes</td><td>Proposed 2 options with a recommendation and trade-offs</td></tr>
+      <tr><td>Build</td><td>Reviewed screenshots and the running app</td><td>Wrote the code, tested phone and desktop in a headless browser, checked contrast</td></tr>
+      <tr><td>Release</td><td>Approved publishing</td><td>Committed, published to the same private link so progress was kept</td></tr>
+      <tr><td>Learning</td><td>Approved which lessons to keep</td><td>Added them to the design agent</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout">
+    <p><b>Where I corrected the AI:</b> the first icon was a sprite that looked like a well-known game character. Fine for a private app, not for a public page, so I drew a pixel pretzel instead. Claude also caught the reverse: it noticed the source repository had been made public by mistake, and flagged the copyright risk before building this site.</p>
+  </div>
+
+  <h2>Privacy by design</h2>
+  <ul>
+    <li>The textbook content stays in a private repository and a private app link.</li>
+    <li>This page and the <a href="demo/">demo</a> use only sample cards I wrote. A small export script builds the demo from the real app and stops with an error if any textbook name is still in it.</li>
+    <li>In the demo, progress stays in your browser. Nothing is sent anywhere.</li>
+  </ul>
+
+  <h2>Result and next steps</h2>
+  <ul>
+    <li>I use it every day. Opening the app and reviewing today's cards takes one tap.</li>
+    <li>The repo is set up for more apps (a Chinese one is planned), each with its own rules, so changes to one can't break another.</li>
+    <li>Next: take the accent colour from the new pretzel icon.</li>
+  </ul>
+  <p><a class="btn" href="demo/">Try the demo</a></p>
+</article>
+</main>
+
+<footer class="site-foot"><div class="wrap">
+  <span>© 2026 Yizhe Zhou · Berlin</span>
+  <span><a href="https://www.linkedin.com/in/yizhe-zhou/">LinkedIn</a> · <a href="https://github.com/Igaruhe/igaruhe.github.io">Source on GitHub</a></span>
+</div></footer>
+</body>
+</html>
