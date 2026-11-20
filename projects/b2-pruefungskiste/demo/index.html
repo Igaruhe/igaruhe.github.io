@@ -1,0 +1,571 @@
+<title>B2 Prüfungskiste (Demo)</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: a study box — sticky filter bar on top, then either a scannable list or one big flip card. Category colour = which drawer the card comes from. */
+:root{
+  --bg:#f3f2f1; --paper:#ffffff; --paper-2:#f3f2f1; --ink:#0b0c0c; --muted:#484949; --line:#cecece; --input:#0b0c0c;
+  --accent:#2a702c; --accent-ink:#ffffff; --accent-soft:#e3f1df; --mark:#2a702c; --accent-shadow:#173f18;
+  --link:#1a65a6; --link-hover:#0f385c; --focus:#ffdd00; --focus-text:#0b0c0c;
+  --c-gram:#1a65a6; --c-gram-s:#d2e2f1; --c-nvv:#7a4f00; --c-nvv-s:#f5e6c4; --c-red:#4c2c92; --c-red-s:#e1dbef; --c-ws:#aa2a16; --c-ws-s:#f6d7d2;
+  --good:#2a702c; --good-s:#e3f1df; --again:#aa2a16; --again-s:#f6d7d2;
+  --f-head:"Helvetica Neue",Helvetica,Arial,sans-serif; --f-ui:"Helvetica Neue",Helvetica,Arial,sans-serif; --f-mono:"Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1110; --paper:#1a1d1c; --paper-2:#232726; --ink:#f3f2f1; --muted:#b9bbbb; --line:#3f4544; --input:#b9bbbb;
+  --accent:#7fcf78; --accent-ink:#0b0c0c; --accent-soft:#1b3a1c; --mark:#9bdc95; --accent-shadow:#3c7a37;
+  --link:#8ab8e6; --link-hover:#b9d5f2; --focus:#ffdd00; --focus-text:#0b0c0c;
+  --c-gram:#8ab8e6; --c-gram-s:#16283a; --c-nvv:#e6b85a; --c-nvv-s:#382b13; --c-red:#b8a6ec; --c-red-s:#2a2346; --c-ws:#f0907e; --c-ws-s:#3d221e;
+  --good:#9bdc95; --good-s:#1b3a1c; --again:#f0907e; --again-s:#3d221e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1110; --paper:#1a1d1c; --paper-2:#232726; --ink:#f3f2f1; --muted:#b9bbbb; --line:#3f4544; --input:#b9bbbb;
+  --accent:#7fcf78; --accent-ink:#0b0c0c; --accent-soft:#1b3a1c; --mark:#9bdc95; --accent-shadow:#3c7a37;
+  --link:#8ab8e6; --link-hover:#b9d5f2; --focus:#ffdd00; --focus-text:#0b0c0c;
+  --c-gram:#8ab8e6; --c-gram-s:#16283a; --c-nvv:#e6b85a; --c-nvv-s:#382b13; --c-red:#b8a6ec; --c-red-s:#2a2346; --c-ws:#f0907e; --c-ws-s:#3d221e;
+  --good:#9bdc95; --good-s:#1b3a1c; --again:#f0907e; --again-s:#3d221e; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:22px 48px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 20px;margin-bottom:14px}
+h1{font-family:var(--f-head);font-weight:700;font-size:clamp(1.6rem,4.5vw,2.2rem);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);font-size:.88rem;margin:2px 0 0}
+.stats{display:flex;gap:14px;font:500 .78rem var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.stats b{color:var(--good);font-weight:500}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line)}
+.cats{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+.cat{flex:0 0 auto;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:7px 13px;font:600 .86rem var(--f-ui);cursor:pointer;display:flex;gap:6px;align-items:center}
+.cat i{width:9px;height:9px;border-radius:50%;background:var(--dot,var(--muted));display:inline-block}
+.cat small{font:500 .72rem var(--f-mono);color:var(--muted)}
+.cat[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.cat[aria-pressed="true"] small{color:inherit;opacity:.75}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input[type=search]{font:500 .86rem var(--f-ui);color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-width:0}
+input[type=search]{flex:1 1 180px}
+select{flex:0 1 auto;max-width:100%}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-left:auto}
+.seg button{border:0;background:var(--paper);color:var(--muted);font:600 .84rem var(--f-ui);padding:7px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tag{font:500 .68rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.t-gram{color:var(--c-gram);background:var(--c-gram-s)} .t-nvv{color:var(--c-nvv);background:var(--c-nvv-s)} .t-red{color:var(--c-red);background:var(--c-red-s)} .t-ws{color:var(--c-ws);background:var(--c-ws-s)}
+.meta{font:500 .72rem var(--f-mono);color:var(--muted)}
+/* list */
+.group{margin-top:22px}
+.group h2{font-family:var(--f-head);font-size:1.08rem;margin:0 0 8px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.group h2 .meta{font-weight:400}
+.list{display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+details{border-top:1px solid var(--line)} details:first-child{border-top:0}
+summary{list-style:none;cursor:pointer;padding:10px 14px;display:flex;gap:10px;align-items:baseline}
+summary::-webkit-details-marker{display:none}
+summary .f{flex:1;min-width:0;font-family:var(--f-head);font-size:1.02rem}
+summary .st{font:500 .7rem var(--f-mono);color:var(--good)}
+summary .st.again{color:var(--again)}
+details[open] summary{background:var(--paper-2)}
+.body{padding:4px 14px 16px;min-width:0}
+.more{display:block;margin:14px auto 0;border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:8px 16px;font:600 .86rem var(--f-ui);color:var(--ink);cursor:pointer}
+.empty{background:var(--paper);border:1px dashed var(--line);border-radius:10px;padding:32px 20px;text-align:center;color:var(--muted);margin-top:20px}
+/* back content */
+.rule{margin:6px 0 10px}.rule strong{color:var(--mark)}
+mark{background:none;color:var(--mark);font-weight:700}
+ul.exs,ul.ph{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+ul.exs li{font-family:var(--f-head);background:var(--paper-2);border-radius:7px;padding:8px 11px}
+ul.ph li{font-family:var(--f-head);font-size:1.05rem;padding-left:16px;position:relative}
+ul.ph li::before{content:"›";position:absolute;left:0;color:var(--c-red);font-weight:700}
+.ans{font-family:var(--f-head);font-size:1.15rem}
+.mean{font-family:var(--f-head);font-style:italic;color:var(--muted);margin:2px 0 10px}
+.ex{margin-top:10px;background:var(--c-red-s);border-radius:7px;padding:8px 11px;font-family:var(--f-head)}
+.ex span,.lab{display:block;font:500 .68rem var(--f-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:10px 0 3px}
+.ex span{margin-top:0;color:var(--c-red)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.box{background:var(--paper-2);border-radius:7px;padding:8px 10px;font-size:.88rem}
+.syn{display:flex;flex-wrap:wrap;gap:5px;margin:0}.syn span{background:var(--c-nvv-s);color:var(--c-nvv);border-radius:99px;padding:2px 9px;font-size:.84rem;font-weight:600}
+.body p{margin:0}
+/* explain */
+.explain{margin-top:8px}
+.xbtn{border:1px solid var(--c-ws);color:var(--c-ws);background:transparent;border-radius:8px;padding:7px 12px;font:600 .84rem var(--f-ui);cursor:pointer}
+.xbtn[disabled]{opacity:.6;cursor:default}
+.xout{margin-top:8px;font-size:.92rem}
+.xout .lab:first-child{margin-top:0}
+.xnote{color:var(--muted);font-size:.84rem;margin-top:6px}
+/* cards */
+.deck{margin-top:18px;display:flex;flex-direction:column;gap:14px}
+.prog{height:5px;background:var(--line);border-radius:5px;overflow:hidden}.prog span{display:block;height:100%;background:var(--good);width:0;transition:width .3s}
+.scene{perspective:1500px}
+.card{position:relative;min-height:360px;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.3,.7,.3,1);cursor:pointer}
+.card.flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--paper);border:1px solid var(--line);border-left:6px solid var(--edge,var(--accent));border-radius:10px;padding:22px 22px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.back{transform:rotateY(180deg)}
+.face .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.face .top .meta{margin-left:auto}
+.prompt{font-family:var(--f-head);font-weight:600;font-size:clamp(1.35rem,4.2vw,1.9rem);line-height:1.25;margin:auto 0;text-wrap:balance}
+.hint{color:var(--muted);font-size:.84rem}
+.judge{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.judge button{padding:10px 4px;border-radius:9px;border:0;font:700 .92rem var(--f-ui);cursor:pointer}
+.b-again{background:var(--again-s);color:var(--again)} .b-good{background:var(--good-s);color:var(--good)}
+.b-hard{background:var(--c-nvv-s);color:var(--c-nvv)} .b-easy{background:var(--accent-soft);color:var(--accent)}
+.judge button small{display:block;font:500 .7rem var(--f-mono);opacity:.8;margin-top:2px}
+ol.hard{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}ol.hard li{display:flex;gap:8px;align-items:baseline;min-width:0}ol.hard .f{flex:1;min-width:0;font-family:var(--f-head);overflow-wrap:anywhere}ol.hard .n{font:500 .74rem var(--f-mono);color:var(--again);white-space:nowrap}
+.nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.nav button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:7px 13px;font:600 .84rem var(--f-ui);cursor:pointer}
+.keys{text-align:center;color:var(--muted);font-size:.76rem}
+kbd{font:500 .7rem var(--f-mono);border:1px solid var(--line);border-radius:4px;padding:0 5px;background:var(--paper)}
+.sync{font:500 .72rem var(--f-mono);color:var(--muted)}.sync.on{color:var(--good)}
+.dash{margin-top:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.panel.wide{grid-column:1/-1}
+.panel h3{margin:0 0 10px;font:600 .74rem var(--f-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.big{font-family:var(--f-head);font-weight:700;font-size:2.4rem;line-height:1;font-variant-numeric:tabular-nums}
+.big small{font-size:1rem;color:var(--muted);font-weight:400}
+.goalbar{height:12px;background:var(--paper-2);border-radius:6px;overflow:hidden;margin:10px 0 6px}.goalbar span{display:block;height:100%;background:var(--good);border-radius:6px}
+.goalbar.today span{background:var(--accent)}
+.note{color:var(--muted);font-size:.86rem;margin:4px 0 0}
+.catrow{display:grid;grid-template-columns:7.5rem 1fr 4.5rem;gap:10px;align-items:center;margin:7px 0;font-size:.88rem}
+.catrow .goalbar{margin:0;height:9px}
+.catrow .n{font:500 .74rem var(--f-mono);text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.days{display:grid;grid-template-columns:repeat(14,1fr);gap:4px;align-items:end;height:110px;margin-top:6px}
+.days div{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:3px;min-width:0}
+.days i{display:block;width:100%;border-radius:3px 3px 0 0;background:var(--good);min-height:2px}
+.days i.miss{background:var(--line)}
+.days b{font:500 .62rem var(--f-mono);color:var(--muted);font-weight:500}
+.days .goalline{position:relative}
+.examrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.examrow input{font:500 .9rem var(--f-ui);color:var(--ink);background:var(--paper-2);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+@media (max-width:620px){.dash{grid-template-columns:1fr}.catrow{grid-template-columns:6.5rem 1fr 4rem}}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+/* Mobile: the filters fold away behind one "Filter" button so the card stays in view. Desktop is unchanged. */
+.mbar,.fsum,.fdone,.tabbar,.ti{display:none}
+.ftoggle{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:7px 12px;font:600 .86rem var(--f-ui);cursor:pointer}
+.ftoggle .fcount{font:600 .72rem var(--f-mono);background:var(--ink);color:var(--paper);border-radius:999px;padding:1px 7px}
+.ftoggle .fcount:empty{display:none}
+.ftoggle .chev{width:8px;height:8px;border:solid currentColor;border-width:0 2px 2px 0;transform:translateY(-2px) rotate(45deg);transition:transform .15s}
+.ftoggle[aria-expanded="true"] .chev{transform:translateY(1px) rotate(-135deg)}
+.fsum{margin:0;font-size:.82rem;color:var(--muted);align-items:baseline;gap:8px}
+.fsum span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.fsum b{color:var(--ink);font-weight:600}
+.linkbtn{border:0;background:none;padding:2px 0;color:var(--accent);font:600 .82rem var(--f-ui);text-decoration:underline;text-underline-offset:3px;cursor:pointer;flex:0 0 auto}
+.fdone{width:100%;border:0;border-radius:8px;background:var(--accent);color:var(--accent-ink);font:600 .9rem var(--f-ui);padding:10px 12px;cursor:pointer}
+.fdone:disabled{opacity:.55;cursor:default}
+.fpanel{display:flex;flex-direction:column;gap:10px}
+@media (max-width:620px){
+  .mbar{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .bar:not(.open) .fpanel{display:none}
+  .bar.has-f:not(.open) .fsum{display:flex}
+  .bar.no-f .mbar .ftoggle,.bar.no-f .fsum{display:none}
+  .fdone{display:block}
+  .fpanel select{flex:1 1 100%}
+  /* card first: smaller header, one-line deck bar, card sized so the rating buttons fit on screen */
+  .wrap{padding-top:12px}
+  header{margin-bottom:6px;gap:2px 12px}
+  .sub{display:none}
+  h1{font-size:1.45rem}
+  .deck{margin-top:10px;gap:10px}
+  .card{min-height:clamp(200px,calc(100svh - 360px),430px)}
+  /* bottom tab bar, like a phone app: icon + short label, thumb-reachable */
+  body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+  .tabbar{display:block;position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--paper);border-top:1px solid var(--line);padding:0 max(8px,env(safe-area-inset-left,0px)) env(safe-area-inset-bottom,0px)}
+  .tabbar .seg{display:grid;grid-template-columns:repeat(3,1fr);border:0;border-radius:0;margin:0 auto;max-width:520px;width:100%}
+  .tabbar .seg button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px 7px;min-height:56px;background:none;color:var(--muted);font:600 .72rem var(--f-ui)}
+  .tabbar .seg button[aria-pressed="true"]{background:none;color:var(--accent)}
+  .tabbar .seg button[aria-pressed="true"] .ti{background:var(--accent-soft)}
+  .ti{display:block;width:44px;height:28px;padding:3px 11px;border-radius:14px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .ti circle{fill:currentColor;stroke:none}
+  .face{padding:16px}
+}
+@media (hover:none){.keys{display:none}}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}.seg{margin-left:0}.face{padding:18px 16px}}
+
+/* Theme: GOV.UK Design System foundations (text, borders, links, yellow focus, square corners, green primary button, system sans),
+   neutral surface header; accent green and focus yellow taken from the icon (60-30-10). No GOV.UK crown, name or Transport font. */
+body{font-size:16px;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+@media (min-width:641px){body{font-size:19px}}
+:is(.cat,select,input,.seg,.tag,.list,.more,.empty,ul.exs li,.ex,.box,.xbtn,.prog,.prog span,.face,.judge button,.nav button,.panel,.goalbar,.goalbar span,.days i,.examrow input,.ftoggle,.fcount,.fdone,.ti,.syn span,kbd){border-radius:0}
+html,body{overflow-x:clip}
+body{margin:0}
+.mast{background:var(--paper);box-shadow:0 0 0 100vmax var(--paper),0 1px 0 100vmax var(--line);clip-path:inset(0 -100vmax -1px);margin:-22px 0 20px;padding:14px 0 12px;align-items:center}
+.brandrow{display:flex;gap:14px;align-items:center}
+.logo{width:40px;height:40px;flex:0 0 auto;display:block;image-rendering:pixelated}
+.mast h1{letter-spacing:0}
+h1,.group h2,.prompt,.big{font-weight:700}
+.cat{border:2px solid var(--line);font-weight:700}
+.cat[aria-pressed="true"]{border-color:var(--ink)}
+select,input[type=search],.examrow input{border:2px solid var(--input);padding:6px 8px}
+.seg{border:2px solid var(--input)}
+.seg button{font-weight:700}
+/* button hierarchy: primary = rating buttons / green; secondary = Filter, Mehr (GOV.UK secondary: light, thin edge); tertiary = Zurück/Mischen/Weiter (text only) */
+.ftoggle,.more{border:1px solid var(--line);background:var(--paper);font-weight:600;box-shadow:0 2px 0 var(--line)}
+.nav{gap:4px}
+.nav button{border:0;background:none;box-shadow:none;font-weight:600;color:var(--muted);min-height:44px;padding:8px 14px}
+.nav button:hover{color:var(--ink);text-decoration:underline;text-underline-offset:4px}
+.fdone{background:var(--accent);color:var(--accent-ink);box-shadow:0 2px 0 var(--accent-shadow);font-weight:700}
+.fdone:hover{filter:brightness(.92)}
+.judge button{box-shadow:0 2px 0 currentColor}
+.b-easy{background:var(--c-gram-s);color:var(--c-gram)}
+.face{border-width:1px;border-left-width:8px}
+.tag{letter-spacing:.02em;font-weight:700}
+.linkbtn{color:var(--link);text-decoration-thickness:1px}
+.linkbtn:hover{color:var(--link-hover);text-decoration-thickness:3px}
+.empty{border-style:solid}
+/* GOV.UK focus state: yellow background, dark text, thick dark underline */
+button:focus-visible,summary:focus-visible,.linkbtn:focus-visible{outline:3px solid transparent;background:var(--focus)!important;color:var(--focus-text)!important;box-shadow:0 -2px var(--focus),0 4px var(--focus-text)!important}
+button:focus-visible small,button:focus-visible .ti{color:var(--focus-text)!important;background:none!important}
+select:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:0;box-shadow:inset 0 0 0 2px var(--input)}
+.card:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.card:focus-visible .face{box-shadow:inset 0 0 0 2px var(--focus-text)}
+/* Navigation by task: Üben (default, no filters) · Stöbern (filters, list, "Diese Auswahl üben") · Fortschritt.
+   Desktop: a text navigation row under the header. Phones: the same buttons move into the bottom tab bar. */
+.bar.no-f{display:none}
+.views{border-bottom:1px solid var(--line);margin:-20px 0 4px}
+.views .seg{border:0;margin:0;overflow:visible;display:flex;gap:28px}
+.views .seg button{background:none;color:var(--ink);padding:12px 0 10px;font-weight:700;box-shadow:none}
+.views .seg button:hover{color:var(--link-hover);text-decoration:underline;text-underline-offset:4px}
+.views .seg button[aria-pressed="true"]{background:none;color:var(--accent);box-shadow:inset 0 -4px 0 var(--accent)}
+.scope{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;justify-content:space-between;margin:0;font-size:.9rem;color:var(--muted)}
+.scope b{color:var(--ink)}
+.scope .meta{white-space:nowrap}
+.practice{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin-top:18px;background:var(--paper);border:1px solid var(--line);padding:12px 14px}
+.practice p{margin:0;color:var(--muted);font-size:.9rem;min-width:0}
+.practice p b{color:var(--ink)}
+.btn-primary{border:0;background:var(--accent);color:var(--accent-ink);box-shadow:0 2px 0 var(--accent-shadow);font:700 .95rem var(--f-ui);padding:10px 16px;min-height:44px;cursor:pointer}
+.btn-primary:hover{filter:brightness(.92)}
+.empty .btn-primary{margin-top:12px}
+@media (max-width:620px){
+  .views{display:none}
+  .practice{margin-top:12px}
+  .practice .btn-primary{width:100%}
+  .practice .plabel{display:none} /* the filter summary above already names the selection */
+  .mast{margin:-12px 0 12px;padding:10px 0 8px}
+  .card{min-height:clamp(190px,calc(100svh - 315px),460px)}
+  .logo{width:30px;height:30px}
+  .brandrow{gap:10px}
+  .tabbar{border-top:2px solid var(--line)}
+  .tabbar .seg{border:0}
+  .tabbar .seg button[aria-pressed="true"]{box-shadow:inset 0 4px 0 var(--accent)}
+  .tabbar .seg button[aria-pressed="true"] .ti{background:none}
+  .tabbar .seg button[aria-pressed="true"] span{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
+}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div class="brandrow">
+      <img class="logo" alt="" width="52" height="52" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAACuCAYAAACvDDbuAAADMUlEQVR42u3dsW0UURAG4Fu0AQHBBc5AlOAaLFogoAE3AAXYEgVQAQ0QkBFTBCUgkAgcEBAQIJmAkFukMfP8Zu6+L7RPd3vvfj3Nm919u9sBAAAAAAAAAAAAAABUt1Q7oP2jh7czPvf7j5+LOPTxwBAguCC4ILgILsw3fCWd1SX49Pps6HGeX92EXn99sT/495cfvi0dxjPLrG6MGRelAgguCC6CCwWkrQijq92sLsHjy3cH//717YuhA7fVhYiuso+167IlqwthxkWpAIILgovgQgHhFd6s7kEXWavv7uMWHYdot8GMi1IBBBcEF8GFAtK6CqfWPchaZeu6/KGrgFIBBBcEF8GFhtatf1S7fz/rGoCo6Kp/Vveg+zUSW3nb6jaYcVEqgOCC4CK4UMASXeXNWh2P3hUw+n27dA+y9nmo9rubcVEqgOCC4CK4UMA664NnXXuQdZzduwfR9zm/uil154sZF6UCCC4ILoILBazVDmjWkwq3HGv3wIwLgguCi+CC4MJ/K9dViN5fz/2MvxkXBBfBBcEFwYW/hPdV2JJ1Tj9rX4VqT8DMupOi+74KWcdvxkWpAIILgovgQgFrdDU3+lz2P3ZHvB35/tW6B3cYn92M3+vpqy8Hc/L5zZPQ53qyJEoFEFwQXAQXGgrfVTD6GoDouexZuwV2f5JjtV0odRVQKoDgguAiuNBQ2l4FWefEZ62yo6vgLcd6p0b0eEaPmxkXpQIILgguggsFlLtWoXuXIEuXcZ41nmZclAoguCC4CC4UkNZVqHYOParLMya6dxt0FVAqgOCC4ILgckTSniw568r5rH0bqj3RMqt7MGv/BDMuCC6CC4ILgssJKLevQlb3IGr0tRBdvm+1J12acVEqgOCC4CK4UNjw8/Dd92Ho4v3HX6HXP3+2pnQJtoy+xsOMi1IBBBcEF8GFAqbtJaDbcDdZ3YMtXXazNOOiVADBBcFFcKGAcjsURrsN1xf7lNX0qenSPTDjolQAwQXBRXChsKX7F8jaz6HLtRCehWHGRakAgguCi+BCGcupfeHRu0rO0qUbYMZFqQCCC4ILggsAAAAAAAAAAAAAAAD36DfuEymS5stZFQAAAABJRU5ErkJggg==">
+      <div>
+      <h1>B2 Prüfungskiste</h1>
+      <p class="sub">Demo mit 20 Beispielkarten: Grammatik, Verbindungen, Redemittel und Wortschatz.</p>
+      </div>
+    </div>
+    <div class="stats"><span id="stats"></span><span class="sync" id="sync">lädt …</span></div>
+  </header>
+
+  <nav class="views" id="views" aria-label="Bereich">
+      <div class="seg" id="seg" role="group" aria-label="Bereich">
+        <button type="button" id="m-cards" aria-pressed="true"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="14" height="13" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v11"/></svg><span>Üben</span></button>
+        <button type="button" id="m-list" aria-pressed="false"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="18" r="1.2"/></svg><span>Stöbern</span></button>
+        <button type="button" id="m-stats" aria-pressed="false"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Fortschritt</span></button>
+      </div>
+  </nav>
+
+  <div class="bar" id="bar">
+    <div class="mbar" id="mbar">
+      <button type="button" class="ftoggle" id="ftoggle" aria-expanded="false" aria-controls="fpanel">Filter <span class="fcount" id="fcount"></span><i class="chev" aria-hidden="true"></i></button>
+    </div>
+    <p class="fsum" id="fsum" aria-live="polite"><span id="fsumtext"></span><button type="button" class="linkbtn" id="freset">Zurücksetzen</button></p>
+    <div class="fpanel" id="fpanel">
+    <div class="cats" id="cats" role="group" aria-label="Kategorie"></div>
+    <div class="row" id="frow">
+      <select id="book" aria-label="Buch"></select>
+      <select id="chap" aria-label="Kapitel"></select>
+      <select id="topic" aria-label="Thema / Modul"></select>
+      <input type="search" id="q" placeholder="Suchen … z. B. Rücksicht, obwohl" aria-label="Suchen">
+    </div>
+    <button type="button" class="fdone" id="fdone"></button>
+    </div>
+  </div>
+
+  <main id="main"></main>
+</div>
+<nav class="tabbar" id="tabbar" aria-label="Ansicht"></nav>
+
+<script>try{const k="hub-explain-v1",c=JSON.parse(localStorage.getItem(k)||"{}");localStorage.setItem(k,JSON.stringify(Object.assign({"sich bewerben (um + Akk.)":{"bedeutung":"Sich offiziell um eine Stelle oder einen Platz bemühen.","englisch":"to apply (for)","formen":"bewirbt sich · bewarb sich · hat sich beworben","wortaufbau":"be- + werben","synonyme":["sich melden für"],"beispiele":["Sie bewirbt sich um eine Stelle als Ingenieurin.","Nachdem ich mich beworben hatte, wartete ich zwei Wochen auf eine Antwort."]},"die Voraussetzung, -en":{"bedeutung":"Eine Bedingung, die erfüllt sein muss.","englisch":"requirement, prerequisite","formen":"die Voraussetzung, die Voraussetzungen","wortaufbau":"voraus + setzen + -ung","synonyme":["die Bedingung, die Bedingungen","die Anforderung, die Anforderungen"],"beispiele":["Gute Deutschkenntnisse sind eine Voraussetzung für die Stelle.","Unter der Voraussetzung, dass alle zustimmen, beginnen wir morgen."]},"zuverlässig":{"bedeutung":"So, dass man sich darauf verlassen kann.","englisch":"reliable","formen":"zuverlässiger, am zuverlässigsten","wortaufbau":"zu + verlass(en) + -ig","synonyme":["verlässlich","vertrauenswürdig"],"beispiele":["Er ist ein sehr zuverlässiger Kollege.","Der Zug war heute zuverlässiger, als ich erwartet hatte."]},"die Nachhaltigkeit":{"bedeutung":"Ein Umgang mit Ressourcen, der auch künftigen Generationen nicht schadet.","englisch":"sustainability","formen":"die Nachhaltigkeit, kein Plural","wortaufbau":"nach + halt(en) + -ig + -keit","synonyme":["die Zukunftsfähigkeit"],"beispiele":["Viele Firmen werben heute mit Nachhaltigkeit.","Nachhaltigkeit heißt auch, weniger zu kaufen, obwohl es bequem wäre."]},"die Herausforderung, -en":{"bedeutung":"Eine schwierige Aufgabe, die viel Einsatz verlangt.","englisch":"challenge","formen":"die Herausforderung, die Herausforderungen","wortaufbau":"heraus + fordern + -ung","synonyme":["die Schwierigkeit, die Schwierigkeiten","die Aufgabe, die Aufgaben"],"beispiele":["Der Umzug ins Ausland war eine große Herausforderung.","Je größer die Herausforderung, desto mehr lernt man."]},"überzeugen (von + Dat.)":{"bedeutung":"Jemanden dazu bringen, etwas zu glauben oder zu tun.","englisch":"to convince","formen":"überzeugt · überzeugte · hat überzeugt","wortaufbau":"über + zeugen (untrennbar)","synonyme":["überreden"],"beispiele":["Ihr Argument hat mich überzeugt.","Er konnte das Team von seiner Idee überzeugen."]}},c)))}catch(e){}</script>
+<script>
+window.HUB_DATA={"items":[{"c":"gram","b":"B1+","k":1,"tp":"Gegensätze ausdrücken","kind":"Regel","f":"Wann benutzt man „obwohl“ und wann „trotzdem“?","h":"<div class=\"rule\"><mark>obwohl</mark> leitet einen Nebensatz ein (Verb am Ende). <mark>trotzdem</mark> ist ein Adverb im Hauptsatz (Verb auf Position 2).</div><ul class=\"exs\"><li><mark>Obwohl</mark> es regnet, gehen wir spazieren.</li><li>Es regnet. <mark>Trotzdem</mark> gehen wir spazieren.</li></ul>","id":"demo-0"},{"c":"gram","b":"B1+","k":1,"tp":"Gegensätze ausdrücken","kind":"Übung","f":"Verbinde mit „trotzdem“: Ich bin müde. Ich lerne weiter.","h":"<div class=\"ans\">Ich bin müde. <mark>Trotzdem</mark> lerne ich weiter.</div>","id":"demo-1"},{"c":"gram","b":"B2.1","k":2,"tp":"Passiv mit Modalverben","kind":"Regel","f":"Wie bildet man das Passiv mit einem Modalverb?","h":"<div class=\"rule\">Modalverb (konjugiert) + <mark>Partizip II + werden</mark> am Satzende.</div><ul class=\"exs\"><li>Der Antrag <mark>muss</mark> bis Freitag <mark>abgegeben werden</mark>.</li><li>Das Problem <mark>kann</mark> leicht <mark>gelöst werden</mark>.</li></ul>","id":"demo-2"},{"c":"gram","b":"B2.1","k":2,"tp":"Passiv mit Modalverben","kind":"Übung","f":"Ins Passiv: Man muss die Fenster schließen.","h":"<div class=\"ans\">Die Fenster <mark>müssen geschlossen werden</mark>.</div>","id":"demo-3"},{"c":"gram","b":"B2.1","k":1,"tp":"Irreale Wünsche","kind":"Regel","f":"Wie drückt man einen irrealen Wunsch in der Vergangenheit aus?","h":"<div class=\"rule\">Konjunktiv II der Vergangenheit: <mark>hätte / wäre + Partizip II</mark>.</div><ul class=\"exs\"><li>Wenn ich früher angefangen <mark>hätte</mark>, <mark>wäre</mark> ich jetzt fertig.</li><li>Ich <mark>hätte</mark> gern mehr Zeit <mark>gehabt</mark>.</li></ul>","id":"demo-4"},{"c":"gram","b":"B2.2","k":1,"tp":"Zweiteilige Konnektoren","kind":"Regel","f":"Wie funktioniert „je … desto“?","h":"<div class=\"rule\"><mark>je</mark> + Komparativ im Nebensatz (Verb am Ende), dann <mark>desto / umso</mark> + Komparativ im Hauptsatz (Verb auf Position 2).</div><ul class=\"exs\"><li><mark>Je</mark> mehr ich übe, <mark>desto</mark> sicherer werde ich.</li><li><mark>Je</mark> früher wir losfahren, <mark>umso</mark> weniger Stau haben wir.</li></ul>","id":"demo-5"},{"c":"nvv","b":"B2.2","k":1,"tp":"Nomen-Verb-Verbindungen","kind":"NVV","f":"in Frage kommen","h":"<div class=\"mean\">≈ möglich sein, akzeptabel sein</div><div class=\"grid2\"><div class=\"box\"><b>die Frage</b><br>die Fragen</div><div class=\"box\"><b>kommen</b><br>kommt · kam · ist gekommen</div></div><div class=\"lab\">Wortaufbau</div><p>Frage: etwas, das noch offen ist</p><div class=\"lab\">Synonyme</div><p class=\"syn\"><span>möglich sein</span><span>infrage kommen</span></p><div class=\"lab\">Beispiele</div><ul class=\"exs\"><li>Für die Stelle <mark>kommen</mark> nur zwei Bewerberinnen <mark>in Frage</mark>.</li><li>Ein Umzug <mark>kommt</mark> für uns im Moment nicht <mark>in Frage</mark>.</li></ul>","id":"demo-6"},{"c":"nvv","b":"B2.2","k":1,"tp":"Nomen-Verb-Verbindungen","kind":"NVV","f":"zur Verfügung stellen","h":"<div class=\"mean\">≈ bereitstellen, geben</div><div class=\"grid2\"><div class=\"box\"><b>die Verfügung</b><br>die Verfügungen</div><div class=\"box\"><b>stellen</b><br>stellt · stellte · hat gestellt</div></div><div class=\"lab\">Wortaufbau</div><p>Verfügung: zu „verfügen über“ (etwas haben und nutzen können)</p><div class=\"lab\">Synonyme</div><p class=\"syn\"><span>bereitstellen</span><span>anbieten</span></p><div class=\"lab\">Beispiele</div><ul class=\"exs\"><li>Die Firma <mark>stellt</mark> allen Mitarbeitenden einen Laptop <mark>zur Verfügung</mark>.</li></ul>","id":"demo-7"},{"c":"nvv","b":"B2.2","k":1,"tp":"Nomen-Verb-Verbindungen","kind":"NVV","f":"eine Entscheidung treffen","h":"<div class=\"mean\">≈ entscheiden</div><div class=\"grid2\"><div class=\"box\"><b>die Entscheidung</b><br>die Entscheidungen</div><div class=\"box\"><b>treffen</b><br>trifft · traf · hat getroffen</div></div><div class=\"lab\">Wortaufbau</div><p>Ent-scheid-ung: Nomen zu „entscheiden“</p><div class=\"lab\">Synonyme</div><p class=\"syn\"><span>entscheiden</span><span>sich entschließen</span></p><div class=\"lab\">Beispiele</div><ul class=\"exs\"><li>Wir müssen bis morgen <mark>eine Entscheidung treffen</mark>.</li></ul>","id":"demo-8"},{"c":"nvv","b":"B2.2","k":1,"tp":"Nomen-Verb-Verbindungen","kind":"NVV","f":"in Kraft treten","h":"<div class=\"mean\">≈ gültig werden</div><div class=\"grid2\"><div class=\"box\"><b>die Kraft</b><br>die Kräfte</div><div class=\"box\"><b>treten</b><br>tritt · trat · ist getreten</div></div><div class=\"lab\">Wortaufbau</div><p>Kraft: hier im Sinn von „Gültigkeit“</p><div class=\"lab\">Synonyme</div><p class=\"syn\"><span>gültig werden</span><span>wirksam werden</span></p><div class=\"lab\">Beispiele</div><ul class=\"exs\"><li>Das neue Gesetz <mark>tritt</mark> im Januar <mark>in Kraft</mark>.</li></ul>","id":"demo-9"},{"c":"red","b":"B2.1","k":1,"tp":"Meinung","kind":"Redemittel","f":"Give your opinion","de":"Seine Meinung äußern","h":"<div class=\"mean\">Seine Meinung äußern</div><ul class=\"ph\"><li>Meiner Ansicht nach …</li><li>Ich bin der Meinung, dass …</li><li>Für mich steht fest, dass …</li></ul><div class=\"ex\"><span>Beispiel</span>Meiner Ansicht nach sollte jede Stadt mehr Radwege bauen.</div>","id":"demo-10"},{"c":"red","b":"B2.1","k":1,"tp":"Diskussion","kind":"Redemittel","f":"Disagree politely","de":"Höflich widersprechen","h":"<div class=\"mean\">Höflich widersprechen</div><ul class=\"ph\"><li>Da bin ich anderer Meinung.</li><li>Das sehe ich etwas anders, weil …</li><li>Ich verstehe Ihren Punkt, aber …</li></ul><div class=\"ex\"><span>Beispiel</span>Ich verstehe Ihren Punkt, aber die Kosten wären zu hoch.</div>","id":"demo-11"},{"c":"red","b":"B2.2","k":1,"tp":"Präsentieren & Grafik","kind":"Redemittel","f":"Describe a chart","de":"Eine Grafik beschreiben","h":"<div class=\"mean\">Eine Grafik beschreiben</div><ul class=\"ph\"><li>Die Grafik zeigt …</li><li>Der Anteil ist von … auf … gestiegen.</li><li>Auffällig ist, dass …</li></ul><div class=\"ex\"><span>Beispiel</span>Auffällig ist, dass immer mehr Menschen mit dem Rad zur Arbeit fahren.</div>","id":"demo-12"},{"c":"red","b":"B1+","k":1,"tp":"Planen & Lösen","kind":"Redemittel","f":"Make a suggestion","de":"Einen Vorschlag machen","h":"<div class=\"mean\">Einen Vorschlag machen</div><ul class=\"ph\"><li>Wie wäre es, wenn wir …?</li><li>Ich schlage vor, dass …</li><li>Was hältst du davon, …?</li></ul><div class=\"ex\"><span>Beispiel</span>Wie wäre es, wenn wir das Treffen auf Donnerstag verschieben?</div>","id":"demo-13"},{"c":"ws","b":"B1+","k":1,"tp":"M1 · Bewerbung","kind":"Wort","f":"sich bewerben (um + Akk.)","id":"demo-14"},{"c":"ws","b":"B1+","k":1,"tp":"M1 · Bewerbung","kind":"Wort","f":"die Voraussetzung, -en","id":"demo-15"},{"c":"ws","b":"B1+","k":1,"tp":"M1 · Bewerbung","kind":"Wort","f":"zuverlässig","id":"demo-16"},{"c":"ws","b":"B2.1","k":2,"tp":"M2 · Nachhaltig leben","kind":"Wort","f":"die Nachhaltigkeit","id":"demo-17"},{"c":"ws","b":"B2.1","k":2,"tp":"M2 · Nachhaltig leben","kind":"Wort","f":"die Herausforderung, -en","id":"demo-18"},{"c":"ws","b":"B2.1","k":1,"tp":"M3 · Diskutieren","kind":"Wort","f":"überzeugen (von + Dat.)","id":"demo-19"}],"chapters":{"B1+":["","Arbeitswelt"],"B2.1":["","Meinungen","Umwelt"],"B2.2":["","Gesellschaft"]}};
+(function(){
+"use strict";
+const D=window.HUB_DATA, ITEMS=D.items;
+const BO={"B1+":0,"B2.1":1,"B2.2":2},CO={gram:0,nvv:1,red:2,ws:3};
+ITEMS.forEach((x,n)=>x._n=n);ITEMS.sort((a,b)=>BO[a.b]-BO[b.b]||(a.k||99)-(b.k||99)||CO[a.c]-CO[b.c]||a._n-b._n);
+const CATS=[["all","Alles",null],["gram","Grammatik","--c-gram"],["nvv","Verbindungen","--c-nvv"],["red","Redemittel","--c-red"],["ws","Wortschatz","--c-ws"]];
+const CATNAME={gram:"Grammatik",nvv:"Verbindung",red:"Redemittel",ws:"Wortschatz"};
+const BOOKS=["B1+","B2.1","B2.2"];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let prog=store.get("hub-progress-v1",{}); // id -> "ok" | "again"
+let meta=store.get("hub-meta-v1",{exam:"2026-12-21",log:{}}); if(!meta.log)meta.log={}; if(!meta.exam)meta.exam="2026-12-21";
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+let dbRefs=null,pushT=null,lastPushed="";
+function persist(){store.set("hub-progress-v1",prog);store.set("hub-meta-v1",meta);clearTimeout(pushT);pushT=setTimeout(pushRemote,1500)}
+async function pushRemote(){if(!dbRefs)return;const body=JSON.stringify([prog,meta]);if(body===lastPushed)return;lastPushed=body;
+  try{await dbRefs.p.set({prog});await dbRefs.m.set({exam:meta.exam,log:meta.log});setSync(true)}catch(e){lastPushed="";setSync(false,"Speichern fehlgeschlagen – lokal gesichert")}}
+function setSync(on,msg){const el=$("sync");if(!el)return;el.className="sync"+(on?" on":"");el.textContent=on?"✓ synchronisiert":(msg||"Demo · gespeichert in diesem Browser")}
+const st=store.get("hub-ui-v1",{cat:"all",book:"",chap:"",topic:"",mode:"cards"});
+if(!st.sess)st.sess={k:"heute"}; // Üben session: heute (due + new), auswahl (picked in Stöbern), schwer (from Fortschritt)
+let shown=60, deck=[], di=0, flipped=false;
+function chapName(b,k){const c=D.chapters[b];if(!c||!k)return "";return Array.isArray(c)?c[k]:c[k]}
+function chapLabel(b,k){return k?("K"+k+" · "+chapName(b,k)):"Anhang (Redemittel im Überblick)"}
+function saveUI(){store.set("hub-ui-v1",st)}
+
+/* filters */
+function base(){return ITEMS.filter(i=>(st.cat==="all"||i.c===st.cat)&&(!st.book||i.b===st.book))}
+function filtered(){
+  const q=$("q").value.trim().toLowerCase();
+  return base().filter(i=>(!st.chap||(i.b+"|"+i.k)===st.chap)&&(!st.topic||i.tp===st.topic)&&(!q||(i.f+" "+(i.de||"")+" "+(i.h||"")+" "+i.tp).toLowerCase().includes(q)));
+}
+function fillSelect(el,opts,val,all){el.innerHTML="";const o=document.createElement("option");o.value="";o.textContent=all;el.appendChild(o);opts.forEach(([v,l])=>{const x=document.createElement("option");x.value=v;x.textContent=l;el.appendChild(x)});el.value=opts.some(([v])=>v===val)?val:"";return el.value}
+function buildFilters(){
+  const cats=$("cats");cats.innerHTML="";
+  CATS.forEach(([k,l,c])=>{const n=k==="all"?ITEMS.length:ITEMS.filter(i=>i.c===k).length;const b=document.createElement("button");b.type="button";b.className="cat";b.id="cat-"+k;b.setAttribute("aria-pressed",st.cat===k);if(c)b.style.setProperty("--dot","var("+c+")");b.innerHTML=(c?"<i></i>":"")+esc(l)+" <small>"+n+"</small>";b.onclick=()=>{st.cat=k;st.topic="";refresh(true)};cats.appendChild(b)});
+  st.book=fillSelect($("book"),BOOKS.filter(b=>ITEMS.some(i=>i.b===b&&(st.cat==="all"||i.c===st.cat))).map(b=>[b,"Niveau "+b]),st.book,"Alle Bücher");
+  const chs=[...new Set(base().map(i=>i.b+"|"+i.k))].map(s=>s.split("|")).sort((a,b)=>BOOKS.indexOf(a[0])-BOOKS.indexOf(b[0])||a[1]-b[1]);
+  const chOpts=chs.map(([b,k])=>[b+"|"+k,(st.book?"":b+" · ")+chapLabel(b,+k)]);
+  st.chap=fillSelect($("chap"),chOpts,st.chap,"Alle Kapitel");
+  const tps=[...new Set(base().filter(i=>!st.chap||(i.b+"|"+i.k)===st.chap).map(i=>i.tp))].sort((a,b)=>a.localeCompare(b,"de"));
+  st.topic=fillSelect($("topic"),tps.map(t=>[t,t]),st.topic,st.cat==="ws"?"Alle Module":"Alle Themen");
+}
+function stats(){const ok=ITEMS.filter(i=>isOk(i.id)).length;$("stats").innerHTML="<b>"+ok+"</b> / "+ITEMS.length+" gelernt"}
+
+/* back content */
+function backHTML(i){
+  if(i.c!=="ws")return i.h;
+  return '<p class="meta">'+esc(i.b+" · "+chapLabel(i.b,i.k)+" · "+i.tp)+'</p><div class="explain" data-id="'+esc(i.id)+'">'+explainInner(i)+'</div>';
+}
+const XKEY="hub-explain-v1";let xcache=store.get(XKEY,{});
+function explainInner(i){
+  const x=xcache[i.f];
+  if(x)return renderX(x);
+  if(sampleFn===null)return '<p class="xnote">Tipp: Kopiere das Wort in den Chat und frag nach Bedeutung, Formen und Beispielen.</p>';
+  return '<button type="button" class="xbtn">Erklären lassen (Bedeutung, Formen, Beispiele)</button><div class="xout"></div>';
+}
+function renderX(x){
+  const L=(t,v)=>v?'<span class="lab">'+t+'</span><p>'+esc(v)+'</p>':"";
+  return '<div class="xout">'+L("Bedeutung",x.bedeutung)+(x.englisch?'<p class="meta">EN: '+esc(x.englisch)+'</p>':"")+L("Formen",x.formen)+L("Wortaufbau",x.wortaufbau)+
+   (Array.isArray(x.synonyme)&&x.synonyme.length?'<span class="lab">Synonyme</span><p class="syn">'+x.synonyme.map(s=>'<span>'+esc(s)+'</span>').join("")+'</p>':"")+
+   (Array.isArray(x.beispiele)?'<span class="lab">Beispiele</span><ul class="exs">'+x.beispiele.map(s=>'<li>'+esc(s)+'</li>').join("")+'</ul>':"")+'</div>';
+}
+let sampleFn;
+async function explain(btn,id){
+  const i=ITEMS.find(x=>x.id===id);if(!i||!sampleFn)return;
+  const out=btn.nextElementSibling;btn.disabled=true;btn.textContent="Denkt nach …";
+  const prompt="Du bist eine erfahrene Deutschlehrerin (Muttersprachlerin) für B2-Lernende. Erkläre den Eintrag aus der Wortliste eines Lehrbuchs.\n"+
+   "Eintrag: \""+i.f+"\"\nKapitelthema: "+chapName(i.b,i.k)+" / "+i.tp+"\n\n"+
+   "Antworte NUR mit einem JSON-Objekt in diesem Format:\n"+
+   '{"bedeutung":"Erklärung in einfachem Deutsch, 1 Satz","englisch":"kurze englische Übersetzung","formen":"Nomen: Artikel + Plural; Verben: er/sie/es Präsens, Präteritum, Perfekt; Adjektive: Komparativ/Superlativ falls sinnvoll","wortaufbau":"Wortbestandteile und Herkunft, kurz","synonyme":["Synonym oder ähnlicher Ausdruck, Nomen immer mit Artikel und Plural", "..."],"beispiele":["Beispielsatz B2-Niveau","zweiter Beispielsatz mit Nebensatz"]}';
+  try{
+    const x=await sampleFn.json(prompt,{modelTier:"quick",cache:{gcTime:86400000}});
+    if(!x||typeof x!=="object")throw{code:"invalid_json"};
+    xcache[i.f]=x;store.set(XKEY,xcache);
+    btn.parentElement.innerHTML=renderX(x);
+  }catch(e){
+    btn.disabled=false;btn.textContent="Erneut versuchen";
+    const msg={not_granted:"Erklärungen sind für diese Seite nicht erlaubt.",sampling_disabled:"Claude ist hier nicht verfügbar.",rate_limited:"Zu viele Anfragen – bitte später noch einmal.",invalid_json:"Antwort konnte nicht gelesen werden – bitte erneut versuchen."}[e&&e.code]||"Das hat nicht geklappt – bitte erneut versuchen.";
+    if(e&&(e.code==="not_granted"||e.code==="sampling_disabled")){btn.remove();}
+    out.innerHTML='<p class="xnote">'+esc(msg)+'</p>';
+  }
+}
+document.addEventListener("click",e=>{const b=e.target.closest(".xbtn");if(b){e.stopPropagation();explain(b,b.parentElement.dataset.id)}},true);
+
+/* list view */
+function renderList(){
+  const items=filtered();const main=$("main");
+  if(!items.length){main.innerHTML='<div class="empty">Nichts gefunden. Ändere die Filter oder die Suche. <button type="button" class="linkbtn" id="empty-reset">Filter zurücksetzen</button></div>';$("empty-reset").onclick=resetFilters;return}
+  const label=activeFilters().join(" · ");
+  const groups=new Map();
+  items.slice(0,shown).forEach(i=>{const g=i.b+"|"+i.k+"|"+i.c+"|"+i.tp;if(!groups.has(g))groups.set(g,[]);groups.get(g).push(i)});
+  let html='<div class="practice"><p>'+(label?'<span class="plabel">Auswahl: <b>'+esc(label)+'</b> · </span>':'')+items.length+' Karten</p><button type="button" class="btn-primary" id="practice">'+(items.length===ITEMS.length?"Alle "+items.length+" Karten üben":"Diese "+items.length+" Karten üben")+'</button></div>';
+  groups.forEach((arr,g)=>{const i=arr[0];
+    html+='<section class="group"><h2><span class="tag t-'+i.c+'">'+CATNAME[i.c]+'</span>'+esc(i.tp)+' <span class="meta">'+esc(i.b+" · "+chapLabel(i.b,i.k))+'</span></h2><div class="list">'+
+    arr.map(x=>'<details data-id="'+esc(x.id)+'"><summary><span class="f">'+esc(x.f)+'</span>'+(x.kind==="Übung"?'<span class="tag t-nvv">Übung</span>':"")+(P(x.id)?'<span class="st'+(lapses(x.id)?" again":"")+'">'+(lapses(x.id)?"↻ "+lapses(x.id)+"× nochmal":"✓ gelernt")+'</span>':"")+'</summary><div class="body"></div></details>').join("")+'</div></section>'});
+  if(items.length>shown)html+='<button type="button" class="more" id="more">Mehr anzeigen ('+(items.length-shown)+' weitere)</button>';
+  main.innerHTML=html;
+  main.querySelectorAll("details").forEach(d=>d.addEventListener("toggle",()=>{if(d.open){const b=d.querySelector(".body");if(!b.innerHTML){const i=ITEMS.find(x=>x.id===d.dataset.id);b.innerHTML=backHTML(i)}}}));
+  const m=$("more");if(m)m.onclick=()=>{shown+=120;renderList()};
+  $("practice").onclick=()=>{st.sess={k:"auswahl",ids:items.map(x=>x.id),label:label||"Alle Karten"};st.mode="cards";refresh();window.scrollTo(0,0)};
+}
+
+/* card view — spaced repetition (Anki-style, simplified SM-2) */
+function P(id){const v=prog[id];if(!v)return null;if(typeof v==="string")return{s:v,r:1,l:v==="again"?1:0,iv:v==="ok"?1:0,e:250,d:today()};return v}
+function isOk(id){const p=P(id);return !!p&&p.s==="ok"}
+function isDue(id){const p=P(id);return !!p&&p.d<=today()}
+function lapses(id){const p=P(id);return p?p.l||0:0}
+function computeGoal(){const t=today(),left=ITEMS.filter(i=>!isOk(i.id)).length,lt=(meta.log[t]||{}).l||0,finishBy=addDays(meta.exam,-7),dte=dayDiff(t,meta.exam);
+  if(dte<=0)return 0;const days=dayDiff(t,finishBy)>=0?dayDiff(t,finishBy)+1:Math.max(1,dte);return Math.max(10,Math.ceil((left+lt)/days))}
+function nextIv(p,g){const iv=p?p.iv:0,e=p?p.e:250;
+  if(g===1)return 0;if(g===2)return Math.max(1,Math.round(iv*1.2));
+  if(g===3)return iv===0?1:iv===1?3:Math.round(iv*e/100);return iv===0?4:Math.round(iv*e/100*1.3)}
+function ivLabel(n){return n===0?"<1 T":n<30?n+" T":Math.round(n/30)+" M"}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function sessPool(){const s=st.sess;if(s.k==="auswahl"){const set=new Set(s.ids);return ITEMS.filter(i=>set.has(i.id))}return ITEMS}
+function deckCounts(pool){const due=pool.filter(i=>isDue(i.id)).length,nw=pool.filter(i=>!P(i.id)).length,hard=pool.filter(i=>lapses(i.id)>0).length;
+  const lt=(meta.log[today()]||{}).l||0;return{due,nw,hard,newToday:Math.min(nw,Math.max(0,computeGoal()-lt))}}
+function buildDeck(){const pool=sessPool(),k=st.sess.k;
+  if(k==="heute"){const due=pool.filter(i=>isDue(i.id)).sort((a,b)=>(P(a.id).s==="again"?0:1)-(P(b.id).s==="again"?0:1)||P(a.id).d.localeCompare(P(b.id).d));
+    const c=deckCounts(pool);deck=due.concat(shuffle(pool.filter(i=>!P(i.id))).slice(0,c.newToday))}
+  else if(k==="schwer")deck=pool.filter(i=>lapses(i.id)>0).sort((a,b)=>lapses(b.id)-lapses(a.id)||P(a.id).e-P(b.id).e);
+  else{const dn=new Set(st.sess.done||[]);deck=shuffle(pool.filter(i=>!dn.has(i.id)))}
+  di=0;flipped=false}
+function renderCards(){
+  const pool=sessPool(),k=st.sess.k,c=deckCounts(pool),done=pool.filter(i=>isOk(i.id)).length;
+  const pos=deck.length?'<span class="meta">Karte '+(di%deck.length+1)+' / '+deck.length+'</span>':'';
+  const end=' <button type="button" class="linkbtn" id="sess-end">Beenden</button>';
+  const scope=k==="heute"?'<span><b>Heute</b> · '+c.due+' fällig + '+c.newToday+' neu</span>':
+    k==="schwer"?'<span><b>Schwierige Karten</b> · die häufigsten zuerst'+end+'</span>':
+    '<span>Auswahl: <b>'+esc(st.sess.label)+'</b> · '+pool.length+' Karten'+end+'</span>';
+  let html='<div class="deck"><p class="scope">'+scope+pos+'</p><div class="prog"><span style="width:'+(pool.length?done/pool.length*100:0)+'%"></span></div>';
+  if(!deck.length){html+='<div class="empty">'+(k==="heute"?"Für heute ist alles erledigt. Morgen kommen die nächsten Wiederholungen. Mehr üben? Wähl unter <b>Stöbern</b> ein Kapitel oder Thema aus.":k==="schwer"?"Keine schwierigen Karten mehr. Gut gemacht!<br><button type=\"button\" class=\"btn-primary\" id=\"sess-end2\">Zurück zu Heute</button>":"Auswahl geschafft – jede Karte einmal bewertet.<br><button type=\"button\" class=\"btn-primary\" id=\"sess-end2\">Zurück zu Heute</button>")+'</div></div>';$("main").innerHTML=html;wireDeck();return}
+  const i=deck[di%deck.length],p=P(i.id);
+  const edge="var(--c-"+i.c+")";
+  const front=i.c==="red"?'<div class="prompt">'+esc(i.f)+'</div><span class="hint">Sag zwei passende Redemittel laut, dann umdrehen.</span>':
+    i.c==="ws"?'<div class="prompt">'+esc(i.f)+'</div><span class="hint">Was bedeutet das? Bilde einen eigenen Satz, dann umdrehen.</span>':
+    i.c==="nvv"?'<div class="prompt">'+esc(i.f)+'</div><span class="hint">Bedeutung? Ein Beispielsatz? Dann umdrehen.</span>':
+    '<div class="prompt" style="font-size:clamp(1.15rem,3.6vw,1.5rem)">'+esc(i.f)+'</div><span class="hint">'+(i.kind==="Übung"?"Löse die Aufgabe, dann umdrehen.":"Erkläre die Regel mit einem Beispiel, dann umdrehen.")+'</span>';
+  const badge=p?(p.l?'<span class="tag t-ws">'+p.l+'× Nochmal</span>':'<span class="tag t-gram">Wiederholung</span>'):'<span class="tag t-nvv">Neu</span>';
+  const top='<div class="top"><span class="tag t-'+i.c+'">'+CATNAME[i.c]+(i.kind==="Übung"?" · Übung":"")+'</span>'+badge+'<span class="meta">'+esc(i.b+" · K"+(i.k||"–")+" · "+i.tp)+'</span></div>';
+  const g=[1,2,3,4].map(n=>ivLabel(nextIv(p,n)));
+  html+='<div class="scene"><div class="card'+(flipped?" flip":"")+'" id="card" tabindex="0" role="button" aria-label="Karte umdrehen" style="--edge:'+edge+'"><div class="face front" style="--edge:'+edge+'">'+top+front+'</div><div class="face back" style="--edge:'+edge+'">'+top+(i.c!=="gram"?'<div class="prompt" style="margin:0;font-size:1.25rem">'+esc(i.f)+'</div>':"")+backHTML(i)+'</div></div></div>'+
+   '<div class="judge"><button type="button" class="b-again" id="g1">Nochmal<small>'+g[0]+'</small></button><button type="button" class="b-hard" id="g2">Schwer<small>'+g[1]+'</small></button><button type="button" class="b-good" id="g3">Gut<small>'+g[2]+'</small></button><button type="button" class="b-easy" id="g4">Leicht<small>'+g[3]+'</small></button></div>'+
+   '<div class="nav"><button type="button" id="prev">← Zurück</button><button type="button" id="shuf">Mischen</button><button type="button" id="next">Weiter →</button></div>'+
+   '<p class="keys"><kbd>Leertaste</kbd> umdrehen · <kbd>1</kbd>–<kbd>4</kbd> bewerten · <kbd>←</kbd><kbd>→</kbd> blättern</p></div>';
+  $("main").innerHTML=html;wireDeck();
+}
+function wireDeck(){
+  ["sess-end","sess-end2"].forEach(id=>{const b=$(id);if(b)b.onclick=()=>{st.sess={k:"heute"};refresh()}});
+  const c=$("card");if(!c)return;
+  c.onclick=e=>{if(e.target.closest(".xbtn"))return;flipped=!flipped;c.classList.toggle("flip",flipped)};
+  c.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();c.click()}};
+  [1,2,3,4].forEach(n=>$("g"+n).onclick=()=>rate(n));
+  $("prev").onclick=()=>{di=(di-1+deck.length)%deck.length;flipped=false;renderCards()};
+  $("next").onclick=()=>{di=(di+1)%deck.length;flipped=false;renderCards()};
+  $("shuf").onclick=()=>{shuffle(deck);di=0;flipped=false;renderCards()};
+}
+function rate(g){
+  if(!deck.length)return;const k=di%deck.length,i=deck[k],was=P(i.id),t=today();
+  const p=was?Object.assign({},was):{s:"new",r:0,l:0,iv:0,e:250,d:t};
+  p.iv=nextIv(was,g);p.r=(p.r||0)+1;
+  if(g===1){p.l=(p.l||0)+1;p.e=Math.max(130,p.e-20);p.s="again"}
+  else{if(g===2)p.e=Math.max(130,p.e-15);if(g===4)p.e+=15;p.s="ok"}
+  p.d=addDays(t,p.iv);prog[i.id]=p;
+  const L=meta.log[t]||(meta.log[t]={r:0,l:0});L.r++;
+  if(g>1&&(!was||was.s!=="ok"))L.l++;if(g===1&&was&&was.s==="ok")L.l=Math.max(0,L.l-1);
+  persist();stats();
+  if(st.sess.k==="auswahl"&&g>1){(st.sess.done=st.sess.done||[]).push(i.id);saveUI()}
+  const card=deck.splice(k,1)[0];
+  if(g===1)deck.splice(Math.min(deck.length,k+4),0,card);
+  if(di>=deck.length)di=0;
+  flipped=false;renderCards();
+}
+document.addEventListener("keydown",e=>{
+  if(st.mode!=="cards"||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
+  if(e.key===" "){e.preventDefault();const c=$("card");if(c)c.click()}
+  else if(/^[1-4]$/.test(e.key)&&$("g1"))rate(+e.key);
+  else if(e.key==="ArrowRight"&&$("next"))$("next").click();else if(e.key==="ArrowLeft"&&$("prev"))$("prev").click();
+});
+
+/* progress dashboard */
+function dayDiff(a,b){return Math.round((new Date(b+"T12:00")-new Date(a+"T12:00"))/864e5)}
+function addDays(d,n){const x=new Date(d+"T12:00");x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)}
+function renderStats(){
+  const t=today(),total=ITEMS.length,done=ITEMS.filter(i=>isOk(i.id)).length,left=total-done;
+  const daysToExam=dayDiff(t,meta.exam),finishBy=addDays(meta.exam,-7),daysToFinish=Math.max(1,dayDiff(t,finishBy)+1);
+  const learnedToday=(meta.log[t]||{}).l||0,reviewedToday=(meta.log[t]||{}).r||0;
+    const goal=computeGoal(),dueNow=ITEMS.filter(i=>isDue(i.id)).length;
+  const hardest=ITEMS.filter(i=>lapses(i.id)>0).sort((a,b)=>lapses(b.id)-lapses(a.id)).slice(0,8);
+  let streak=0;for(let d=t;;d=addDays(d,-1)){const L=meta.log[d];if(L&&L.r>0)streak++;else if(d!==t)break;if(streak>400)break}
+  const cats=[["gram","Grammatik"],["nvv","Verbindungen"],["red","Redemittel"],["ws","Wortschatz"]];
+  const catRows=cats.map(([c,l])=>{const all=ITEMS.filter(i=>i.c===c),d=all.filter(i=>isOk(i.id)).length,pc=all.length?d/all.length*100:0;
+    return '<div class="catrow"><span>'+l+'</span><div class="goalbar"><span style="width:'+pc+'%;background:var(--c-'+c+')"></span></div><span class="n">'+d+'/'+all.length+'</span></div>'}).join("");
+  const books=["B1+","B2.1","B2.2"].map(b=>{const all=ITEMS.filter(i=>i.b===b),d=all.filter(i=>isOk(i.id)).length;
+    return '<div class="catrow"><span>Niveau '+b+'</span><div class="goalbar"><span style="width:'+(d/all.length*100)+'%"></span></div><span class="n">'+d+'/'+all.length+'</span></div>'}).join("");
+  const days=[];let mx=goal;for(let k=13;k>=0;k--){const d=addDays(t,-k),L=meta.log[d]||{l:0,r:0};mx=Math.max(mx,L.l);days.push([d,L])}
+  const bars=days.map(([d,L])=>'<div title="'+d+': '+L.l+' gelernt, '+L.r+' geübt"><i class="'+(L.r?"":"miss")+'" style="height:'+(L.l/mx*90)+'%"></i><b>'+new Date(d+"T12:00").toLocaleDateString("de-DE",{weekday:"narrow"})+'</b></div>').join("");
+  const pctToday=goal?Math.min(100,learnedToday/goal*100):100;
+  $("main").innerHTML='<div class="dash">'+
+   '<section class="panel"><h3>Heute</h3><div class="big">'+learnedToday+' <small>/ '+goal+' neue Karten</small></div><div class="goalbar today"><span style="width:'+pctToday+'%"></span></div>'+
+     '<p class="note">'+(learnedToday>=goal?"Tagesziel erreicht – stark! Alles Weitere ist Bonus.":"Noch "+(goal-learnedToday)+" Karten bis zum Tagesziel.")+' Heute geübt: '+reviewedToday+'. Fällige Wiederholungen: <b>'+dueNow+'</b>.</p></section>'+
+   '<section class="panel"><h3>Prüfung</h3><div class="examrow"><label for="exam">Datum</label><input type="date" id="exam" value="'+meta.exam+'"></div>'+
+     '<div class="big" style="margin-top:10px">'+Math.max(0,daysToExam)+' <small>Tage</small></div>'+
+     '<p class="note">Plan: alles einmal bis <b>'+new Date(finishBy+"T12:00").toLocaleDateString("de-DE",{day:"numeric",month:"long"})+'</b> lernen, die letzte Woche nur wiederholen. Serie: '+streak+' '+(streak===1?"Tag":"Tage")+'.</p></section>'+
+   '<section class="panel wide"><h3>Gesamt</h3><div class="big">'+Math.round(done/total*100)+'<small>%</small> <small>· '+done+' von '+total+' gelernt</small></div><div class="goalbar"><span style="width:'+(done/total*100)+'%"></span></div>'+catRows+'</section>'+
+   '<section class="panel"><h3>Letzte 14 Tage · gelernt</h3><div class="days">'+bars+'</div><p class="note">Graue Tage: nicht geübt.</p></section>'+
+   '<section class="panel"><h3>Nach Buch</h3>'+books+'<p class="note">Tipp: Redemittel und Grammatik zuerst – die zählen im Mündlichen und Schriftlichen direkt. Wortschatz jeden Tag in kleinen Portionen.</p></section>'+
+   '<section class="panel wide"><h3>Schwierigste Karten</h3>'+(hardest.length?'<ol class="hard">'+hardest.map(i=>'<li><span class="tag t-'+i.c+'">'+CATNAME[i.c]+'</span><span class="f">'+esc(i.f)+'</span><span class="n">'+lapses(i.id)+'× nochmal</span></li>').join("")+'</ol><button type="button" class="more" id="drill">Diese Karten jetzt üben</button>':'<p class="note">Noch keine. Karten, die du mit „Nochmal“ bewertest, landen hier – die häufigsten oben.</p>')+'</section>'+
+   '</div>';
+  const dr=$("drill");if(dr)dr.onclick=()=>{st.sess={k:"schwer"};st.mode="cards";refresh();window.scrollTo(0,0)};
+  $("exam").onchange=e=>{if(e.target.value){meta.exam=e.target.value;persist();renderStats()}};
+}
+
+/* mobile filter toggle: active-filter count, one-line summary, reset */
+function activeFilters(){const q=$("q").value.trim(),out=[];
+  if(st.cat!=="all")out.push((CATS.find(c=>c[0]===st.cat)||[,st.cat])[1]);
+  if(st.book)out.push("Niveau "+st.book);
+  if(st.chap){const [b,k]=st.chap.split("|");out.push((st.book?"":b+" · ")+(+k?"K"+k:"Anhang"))}
+  if(st.topic)out.push(st.topic);
+  if(q)out.push("„"+q+"“");
+  return out}
+function syncFilterUI(){const f=activeFilters(),bar=$("bar"),n=st.mode!=="list"?0:filtered().length;
+  bar.classList.toggle("has-f",f.length>0);bar.classList.toggle("no-f",st.mode!=="list");
+  $("fcount").textContent=f.length||"";
+  $("ftoggle").setAttribute("aria-label",f.length?"Filter, "+f.length+" aktiv":"Filter");
+  $("fsumtext").innerHTML="Auswahl: <b>"+esc(f.join(" · "))+"</b>";
+  const d=$("fdone");d.disabled=!n;d.textContent=n?n+" Treffer anzeigen":"Keine Treffer";
+  if(st.mode!=="list")setPanel(false)}
+function setPanel(open){$("bar").classList.toggle("open",open);$("ftoggle").setAttribute("aria-expanded",open)}
+function resetFilters(){st.cat="all";st.book="";st.chap="";st.topic="";$("q").value="";refresh()}
+$("ftoggle").onclick=()=>setPanel(!$("bar").classList.contains("open"));
+$("fdone").onclick=()=>{setPanel(false);window.scrollTo(0,0);$("ftoggle").focus({preventScroll:true})};
+$("freset").onclick=resetFilters;
+/* on phones the view switch sits next to the Filter button, outside the folding panel */
+const mq=matchMedia("(max-width:620px)");
+function placeSeg(){const seg=$("seg");if(mq.matches)$("tabbar").appendChild(seg);else $("views").appendChild(seg)}
+(mq.addEventListener?mq.addEventListener("change",placeSeg):mq.addListener(placeSeg));placeSeg();
+
+/* wiring */
+function refresh(rebuild){
+  buildFilters();saveUI();shown=60;
+  $("m-list").setAttribute("aria-pressed",st.mode==="list");$("m-cards").setAttribute("aria-pressed",st.mode==="cards");$("m-stats").setAttribute("aria-pressed",st.mode==="stats");
+  if(st.mode==="cards"){buildDeck();renderCards()}else if(st.mode==="stats")renderStats();else renderList();
+  syncFilterUI();
+}
+$("book").onchange=e=>{st.book=e.target.value;st.chap="";st.topic="";refresh()};
+$("chap").onchange=e=>{st.chap=e.target.value;st.topic="";refresh()};
+$("topic").onchange=e=>{st.topic=e.target.value;refresh()};
+let qt;$("q").oninput=()=>{clearTimeout(qt);qt=setTimeout(refresh,180)};
+$("m-list").onclick=()=>{st.mode="list";refresh()};
+$("m-cards").onclick=()=>{st.mode="cards";refresh()};
+$("m-stats").onclick=()=>{st.mode="stats";refresh()};
+stats();refresh();
+(async()=>{
+  let to=setTimeout(()=>setSync(false),10000);
+  try{
+    const [db,user]=await Promise.all([window.claude&&window.claude.use?window.claude.use("db"):null,window.claude&&window.claude.use?window.claude.use("user"):null]);
+    const uid=user?await user.id():null;
+    if(!db||!uid){clearTimeout(to);setSync(false);return}
+    const p=db.doc("data/users/"+uid+"/progress"),m=db.doc("data/users/"+uid+"/meta");
+    let first={p:true,m:true};
+    const settle=()=>{if(!first.p&&!first.m){clearTimeout(to);dbRefs={p,m};setSync(true);
+      if(Object.keys(prog).length||Object.keys(meta.log).length)persist();}};
+    p.onSnapshot(snap=>{const r=snap&&snap.exists?JSON.parse(JSON.stringify(snap.data())):null;const rp=r&&r.prog||{};
+      if(first.p){Object.keys(prog).forEach(k=>{if(!(k in rp))rp[k]=prog[k]});first.p=false;prog=rp;store.set("hub-progress-v1",prog);stats();if(st.mode!=="cards")refresh();settle()}
+      else if(JSON.stringify(rp)!==JSON.stringify(prog)){prog=rp;store.set("hub-progress-v1",prog);stats();if(st.mode==="stats")renderStats()}},
+      ()=>setSync(false,"Sync unterbrochen – lokal gesichert"));
+    m.onSnapshot(snap=>{const r=snap&&snap.exists?JSON.parse(JSON.stringify(snap.data())):null;
+      if(first.m){if(r){const lg=r.log||{};Object.keys(meta.log).forEach(d=>{if(!lg[d]||(lg[d].r||0)<meta.log[d].r)lg[d]=meta.log[d]});meta={exam:r.exam||meta.exam,log:lg}}first.m=false;store.set("hub-meta-v1",meta);if(st.mode==="stats")renderStats();settle()}
+      else if(r&&JSON.stringify(r.log)!==JSON.stringify(meta.log)){meta={exam:r.exam||meta.exam,log:r.log||{}};store.set("hub-meta-v1",meta);if(st.mode==="stats")renderStats()}},
+      ()=>setSync(false,"Sync unterbrochen – lokal gesichert"));
+  }catch(e){clearTimeout(to);setSync(false,"nur auf diesem Gerät ("+((e&&e.code)||"Fehler")+")")}
+})();
+(async()=>{try{sampleFn=window.claude&&window.claude.use?await window.claude.use("sample"):null}catch(e){sampleFn=null}
+  if(sampleFn===undefined)sampleFn=null;
+  document.querySelectorAll(".explain").forEach(el=>{const i=ITEMS.find(x=>x.id===el.dataset.id);if(i)el.innerHTML=explainInner(i)});
+})();
+})();
+</script>

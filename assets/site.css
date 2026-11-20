@@ -1,0 +1,93 @@
+/* Site styles. Foundations from the GOV.UK Design System (text, borders, links, yellow focus, spacing) with a thin
+   personal layer: one accent (pretzel brown, from the German app's icon). No GOV.UK crown, name or Transport font. */
+:root{
+  --bg:#ffffff; --surface:#f3f2f1; --ink:#0b0c0c; --muted:#484949; --line:#cecece;
+  --link:#1a65a6; --link-hover:#0f385c; --visited:#54319f; --focus:#ffdd00; --focus-text:#0b0c0c;
+  --accent:#8f4c18; --accent-soft:#f8ead9; --btn:#2a702c; --btn-ink:#ffffff; --btn-shadow:#173f18;
+  --f:"Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1110; --surface:#1a1d1c; --ink:#f3f2f1; --muted:#b9bbbb; --line:#3f4544;
+  --link:#8ab8e6; --link-hover:#b9d5f2; --visited:#c3b1ef; --accent:#f0b26b; --accent-soft:#33241a;
+  --btn:#7fcf78; --btn-ink:#0b0c0c; --btn-shadow:#3c7a37; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1110; --surface:#1a1d1c; --ink:#f3f2f1; --muted:#b9bbbb; --line:#3f4544;
+  --link:#8ab8e6; --link-hover:#b9d5f2; --visited:#c3b1ef; --accent:#f0b26b; --accent-soft:#33241a;
+  --btn:#7fcf78; --btn-ink:#0b0c0c; --btn-shadow:#3c7a37; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--f);-webkit-font-smoothing:antialiased}
+@media (min-width:641px){body{font-size:19px;line-height:1.45}}
+.wrap{max-width:960px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+.narrow{max-width:760px}
+/* header */
+.site-head{border-bottom:1px solid var(--line)}
+.site-head .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 24px;padding-block:14px}
+.brand{font-weight:700;font-size:1.05rem;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:10px}
+.brand img{width:28px;height:28px}
+.site-nav{display:flex;flex-wrap:wrap;gap:4px 22px;margin:0;padding:0;list-style:none}
+.site-nav a{display:inline-block;padding:8px 0;color:var(--ink);font-weight:700;text-decoration:none;font-size:.95rem}
+.site-nav a:hover{color:var(--link-hover);text-decoration:underline;text-underline-offset:4px}
+.site-nav a[aria-current="page"]{box-shadow:inset 0 -4px 0 var(--accent)}
+/* type */
+h1,h2,h3{line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:2rem;margin:40px 0 16px}
+h2{font-size:1.5rem;margin:48px 0 16px}
+h3{font-size:1.15rem;margin:28px 0 8px}
+@media (min-width:641px){h1{font-size:3rem;margin-top:56px}h2{font-size:1.9rem}h3{font-size:1.3rem}}
+p,ul,ol{margin:0 0 16px}
+ul,ol{padding-left:22px}li{margin-bottom:6px}
+.lead{font-size:1.2rem;color:var(--ink)}
+@media (min-width:641px){.lead{font-size:1.45rem}}
+.muted{color:var(--muted)}
+.caption{color:var(--muted);font-size:.85em;margin-top:8px}
+.kicker{display:inline-block;font-weight:700;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);margin:40px 0 0}
+@media (min-width:641px){.kicker{margin-top:56px}}
+.kicker+h1{margin-top:8px}
+a{color:var(--link);text-decoration-thickness:1px;text-underline-offset:.15em}
+a:visited{color:var(--visited)}
+a:hover{color:var(--link-hover);text-decoration-thickness:3px}
+/* GOV.UK focus state */
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid transparent;background:var(--focus);color:var(--focus-text)!important;box-shadow:0 -2px var(--focus),0 4px var(--focus-text);text-decoration:none}
+.btn:focus-visible{box-shadow:inset 0 0 0 1px var(--focus),0 4px var(--focus-text)}
+/* buttons */
+.btn{display:inline-block;background:var(--btn);color:var(--btn-ink)!important;font-weight:700;text-decoration:none;padding:10px 18px 9px;box-shadow:0 2px 0 var(--btn-shadow);border:2px solid transparent;margin:4px 12px 16px 0}
+.btn:hover{filter:brightness(.92);text-decoration:none}
+.btn.secondary{background:var(--surface);color:var(--ink)!important;box-shadow:0 2px 0 var(--line)}
+/* blocks */
+.cards{display:grid;grid-template-columns:1fr;gap:16px;margin:16px 0 0;padding:0;list-style:none}
+@media (min-width:700px){.cards{grid-template-columns:1fr 1fr}}
+.card{border:1px solid var(--line);border-top:5px solid var(--accent);background:var(--bg);padding:20px;margin:0;display:flex;flex-direction:column;gap:10px}
+.card h3{margin:0}
+.card p{margin:0}
+.card img{width:100%;height:auto;border:1px solid var(--line);display:block}
+.card .meta{font-size:.85rem;color:var(--muted)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.tags li{margin:0;font-size:.8rem;font-weight:700;background:var(--surface);padding:2px 8px}
+.snapshot{display:grid;grid-template-columns:max-content 1fr;gap:6px 20px;margin:24px 0;padding:16px 20px;background:var(--surface);border-left:5px solid var(--accent)}
+.snapshot dt{font-weight:700}.snapshot dd{margin:0}
+@media (max-width:520px){.snapshot{grid-template-columns:1fr}.snapshot dd{margin-bottom:8px}}
+.inset{border-left:5px solid var(--line);padding:4px 0 4px 16px;margin:0 0 20px;color:var(--ink)}
+.callout{background:var(--accent-soft);padding:16px 20px;margin:24px 0}
+.callout p:last-child{margin:0}
+figure{margin:24px 0}
+figure img{display:block;max-width:100%;height:auto;border:1px solid var(--line)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin:24px 0}
+.pair figure{margin:0}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start;margin:24px 0}
+.trio figure{margin:0}
+@media (max-width:640px){.trio{grid-template-columns:1fr 1fr}.trio figure:last-child{grid-column:1/-1;max-width:50%}}
+table{border-collapse:collapse;width:100%;margin:0 0 20px;font-size:.92em}
+th,td{text-align:left;vertical-align:top;padding:10px 12px 10px 0;border-bottom:1px solid var(--line)}
+th{font-weight:700}
+.table-scroll{overflow-x:auto}
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:20px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;display:grid;place-items:center;background:var(--ink);color:var(--bg);font-weight:700;font-size:.9rem}
+.steps h3{margin:0 0 4px}
+/* footer */
+.site-foot{margin-top:72px;border-top:1px solid var(--line);background:var(--surface)}
+.site-foot .wrap{padding-block:24px;display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;font-size:.9rem;color:var(--muted)}
+.site-foot a{color:var(--link)}
+.skip{position:absolute;left:-9999px}.skip:focus{left:16px;top:8px;z-index:9;padding:8px}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
